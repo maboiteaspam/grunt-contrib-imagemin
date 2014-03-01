@@ -34,17 +34,11 @@ module.exports = function (grunt) {
 
         async.forEachLimit(this.files, os.cpus().length, function (file, next) {
             imagemin(file.src[0], file.dest, options, function (err, data) {
-                if (err) {
-                    grunt.warn(err);
-                }
-                logger.image_done(file.src[0],data);
+                logger.image_done(file.src[0],data,err);
                 process.nextTick(next);
             });
         }, function (err) {
-            if (err) {
-                grunt.warn(err);
-            }
-            logger.limit_done();
+            logger.limit_done(err);
             done();
         });
     });
@@ -55,18 +49,24 @@ module.exports = function (grunt) {
         that.filesCount = 0;
         that.totalSaved = 0;
 
-        that.image_done = function(src,data){
+        that.image_done = function(src,data,err){
+          if( err ){
+            grunt.warn(err);
+          }else{
             that.totalSaved += data.diffSizeRaw;
 
             var msg = 'already optimized';
             if (data.diffSizeRaw > 10) {
-                msg = 'saved ' + data.diffSize;
+              msg = 'saved ' + data.diffSize;
             }
-
             grunt.log.writeln(chalk.green('✔ ') + src + chalk.gray(' (' + msg + ')'));
+          }
         };
 
-        that.limit_done = function(){
+        that.limit_done = function(err){
+          if( err ){
+            grunt.warn(err);
+          }
             var msg  = 'Minified ' + that.filesCount + ' ';
             msg += that.filesCount === 1 ? 'image' : 'images';
             msg += chalk.gray(' (saved ' + filesize(that.totalSaved) + ')');
@@ -86,14 +86,16 @@ module.exports = function (grunt) {
         that.totalSaved = 0;
         that.bar = null;
 
-        that.image_done = function(src,data){
+        that.image_done = function(src,data,err){
+          if( ! err ){
             that.totalSaved += data.diffSizeRaw;
+          }
             that.bar.tick();
         };
 
-        that.limit_done = function(){
-            var msg = chalk.gray(' (saved ' + filesize(that.totalSaved) + ')');
-            grunt.log.writeln(msg);
+        that.limit_done = function(err){
+          var msg = chalk.gray(' (saved ' + filesize(that.totalSaved) + ')');
+          grunt.log.writeln(msg);
         };
 
         that.init = that.reset = function(files_count){
