@@ -29,7 +29,8 @@ module.exports = function (grunt) {
         var text_logger = new TextLogger();
         var progres_logger = new ProgressLogger();
 
-        logger.init( this.files.length );
+      progres_logger.init( this.files.length );
+      text_logger.init( this.files.length );
 
         async.forEachLimit(this.files, os.cpus().length, function (file, next) {
             imagemin(file.src[0], file.dest, options, function (err, data) {
