@@ -25,7 +25,7 @@ module.exports = function (grunt) {
             progressive: true
         });
 
-      var is_verbose = grunt.options("verbose");
+      var is_verbose = grunt.option("verbose");
         var text_logger = new TextLogger();
         var progres_logger = new ProgressLogger();
 
