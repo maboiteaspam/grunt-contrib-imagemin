@@ -25,20 +25,28 @@ module.exports = function (grunt) {
             progressive: true
         });
 
-        var logger = new TextLogger();
-        if( options.outputFormat === "progress" ){
-          logger = new ProgressLogger();
-        }
+      var is_verbose = grunt.options("verbose");
+        var text_logger = new TextLogger();
+        var progres_logger = new ProgressLogger();
 
         logger.init( this.files.length );
 
         async.forEachLimit(this.files, os.cpus().length, function (file, next) {
             imagemin(file.src[0], file.dest, options, function (err, data) {
-                logger.image_done(file.src[0],data,err);
+
+              if( options.outputFormat === "progress" && !is_verbose ){
+                progres_logger.image_done(file.src[0],data,err);
+              }else{
+                text_logger.image_done(file.src[0],data,err);
+              }
                 process.nextTick(next);
             });
         }, function (err) {
-            logger.limit_done(err);
+          if( options.outputFormat === "progress" && !is_verbose ){
+            progres_logger.limit_done(err);
+          }else{
+            text_logger.limit_done(err);
+          }
             done();
         });
     });
